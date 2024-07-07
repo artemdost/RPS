@@ -28,6 +28,7 @@ contract Main{
     */
     struct Game{
         address makePlayer;
+        uint bid;
         address joinPlayer;
         Option OptionMP;
         Option OptionJP;
@@ -40,7 +41,34 @@ contract Main{
         owner = msg.sender;
     }
 
-    function createGame(uint _step) public{
-        Game game(makePlayer: msg.sender,,OptionMP: _step,,);
+    function createGame(uint _step) public payable{
+        Game memory newGame = Game({
+            makePlayer: msg.sender,
+            bid: msg.value,
+            joinPlayer: address(0),
+            OptionMP: Option(_step),
+            OptionJP: Option(0),
+            winner: address(0)
+            });
+        
+        games.push(newGame);
+    }
+
+    function joinGame(uint gameId, uint _step) public payable{
+        require(msg.value >= games[gameId].bid, "Your bid is too small");
+        games[gameId].joinPlayer = msg.sender;
+        games[gameId].OptionJP = Option(_step);
+        games[gameId].winner = playGame(gameId, games[gameId].makePlayer ,games[gameId].joinPlayer);
+    }
+
+    function playGame(uint gameId, address makePlayer, address joinPlayer) private returns (address){
+        Option make = games[gameId].OptionMP;
+        Option join = games[gameId].OptionJP;
+
+        return address(0);
+    }
+
+    function getGame(uint Id) public view returns (Game memory){
+        return games[Id];
     }
 }
