@@ -32,9 +32,9 @@ contract Main{
     * @param OptionJP Option of player who made the game
     */
     struct Game{
-        address makePlayer;
+        address payable makePlayer;
         uint bid;
-        address joinPlayer;
+        address payable joinPlayer;
         Option OptionMP;
         Option OptionJP;
         address winner;
@@ -49,9 +49,9 @@ contract Main{
 
     function createGame(uint _step) public payable{
         Game memory newGame = Game({
-            makePlayer: msg.sender,
+            makePlayer: payable(msg.sender),
             bid: msg.value,
-            joinPlayer: address(0),
+            joinPlayer: payable(address(0)),
             OptionMP: Option(_step),
             OptionJP: Option(0),
             winner: address(0),
@@ -64,30 +64,40 @@ contract Main{
     function joinGame(uint gameId, uint _step) public payable{
         require(games[gameId].status == Status(0), "Game is already finished");
         require(msg.value >= games[gameId].bid, "Your bid is too small");
-        games[gameId].joinPlayer = msg.sender;
+        games[gameId].joinPlayer = payable(msg.sender);
         games[gameId].OptionJP = Option(_step);
         games[gameId].winner = playGame(gameId, games[gameId].makePlayer ,games[gameId].joinPlayer);
         games[gameId].status = Status(1);
     }
 
-    function playGame(uint gameId, address makePlayer, address joinPlayer) private view returns (address){
+    function playGame(uint gameId, address payable makePlayer, address payable joinPlayer) private returns (address){
         Option make = games[gameId].OptionMP;
         Option join = games[gameId].OptionJP;
 
         if (make == join){
-            return address(0); // тут нужно будет вернуть чето
+            makePlayer.transfer(games[gameId].bid - 1000000000000);
+            joinPlayer.transfer(games[gameId].bid - 1000000000000);
+            return address(0);
         } else if (make == Option(0) && join == Option(1)){
+            joinPlayer.transfer(2 * games[gameId].bid - 1000000000000);
             return joinPlayer;
         } else if (make == Option(1) && join == Option(2)){
+            joinPlayer.transfer(2 * games[gameId].bid - 1000000000000);
             return joinPlayer;
         } else if (make == Option(2) && join == Option(0)){
+            joinPlayer.transfer(2 * games[gameId].bid - 1000000000000);
             return joinPlayer;
         } else{
+            makePlayer.transfer(2 * games[gameId].bid - 1000000000000);
             return makePlayer;
         }
     }
 
     function getGame(uint Id) public view returns (Game memory){
         return games[Id];
+    }
+
+    function getBalance() public view returns(uint){
+      return address(this).balance;
     }
 }
