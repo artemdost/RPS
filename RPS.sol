@@ -18,6 +18,11 @@ contract Main{
         Scissors
     }
 
+    enum Status{
+        Open,
+        Finished
+    }
+
 
     /** 
     * @dev This type will be included in list of all games
@@ -32,7 +37,8 @@ contract Main{
         address joinPlayer;
         Option OptionMP;
         Option OptionJP;
-        address winner;        
+        address winner;
+        Status status;         
     }
 
     Game[] games;
@@ -48,24 +54,37 @@ contract Main{
             joinPlayer: address(0),
             OptionMP: Option(_step),
             OptionJP: Option(0),
-            winner: address(0)
+            winner: address(0),
+            status: Status(0)
             });
         
         games.push(newGame);
     }
 
     function joinGame(uint gameId, uint _step) public payable{
+        require(games[gameId].status == Status(0), "Game is already finished");
         require(msg.value >= games[gameId].bid, "Your bid is too small");
         games[gameId].joinPlayer = msg.sender;
         games[gameId].OptionJP = Option(_step);
         games[gameId].winner = playGame(gameId, games[gameId].makePlayer ,games[gameId].joinPlayer);
+        games[gameId].status = Status(1);
     }
 
-    function playGame(uint gameId, address makePlayer, address joinPlayer) private returns (address){
+    function playGame(uint gameId, address makePlayer, address joinPlayer) private view returns (address){
         Option make = games[gameId].OptionMP;
         Option join = games[gameId].OptionJP;
 
-        return address(0);
+        if (make == join){
+            return address(0); // тут нужно будет вернуть чето
+        } else if (make == Option(0) && join == Option(1)){
+            return joinPlayer;
+        } else if (make == Option(1) && join == Option(2)){
+            return joinPlayer;
+        } else if (make == Option(2) && join == Option(0)){
+            return joinPlayer;
+        } else{
+            return makePlayer;
+        }
     }
 
     function getGame(uint Id) public view returns (Game memory){
