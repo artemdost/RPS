@@ -63,7 +63,7 @@ contract Main{
 
     function joinGame(uint gameId, uint _step) public payable{
         require(games[gameId].status == Status(0), "Game is already finished");
-        require(msg.value >= games[gameId].bid, "Your bid is too small");
+        require(msg.value == games[gameId].bid, "Your bid is too small");
         games[gameId].joinPlayer = payable(msg.sender);
         games[gameId].OptionJP = Option(_step);
         games[gameId].winner = playGame(gameId, games[gameId].makePlayer ,games[gameId].joinPlayer);
